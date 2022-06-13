@@ -6,10 +6,7 @@ sidebar_position: 10
 
 # Introduction
 
-This tutorial describes how to run Aptos nodes for the Aptos Incentivized Testnet 1 (AIT1) program. It explains the following:
 
-- How to configure a validator node to run in test mode. This will be used during the AIT1 registration stage to validate your eligibility, and 
-- How to connect to the incentivized testnet if you are selected to run a validator node.
 
 :::info
 
@@ -25,7 +22,7 @@ Follow the below steps to participate in the Aptos Incentivized Testnet:
 - Follow the instructions to deploy both a validator node and a FullNode in the test mode.
 - Navigate to the [Incentivized Testnet registration page](https://community.aptoslabs.com/) and enter information about your node (pub-keys, IP/DNS address).
 - If you are selected to run a node, follow instructions in [Connecting to Aptos Incentivized Testnet](connect-to-testnet) to join incentivized testnet.
-- Keep the node in healthy state for the entire testing period and follow operational requests as needed. See [Node Liveness Criteria](../../reference/node-liveness-criteria.md) document.
+- Keep the node in healthy state for the entire testing period and follow operational requests as needed. See [Node Liveness Criteria](../ait/node-liveness-criteria.md) document.
 
 ## Before you proceed
 

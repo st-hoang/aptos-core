@@ -61,6 +61,9 @@ const config = {
   themeConfig:
     /** @type {import("@docusaurus/preset-classic").ThemeConfig} */
     ({
+      colorMode: {
+        defaultMode: "dark",
+      },
       docs: {
         sidebar: {
           autoCollapseCategories: true,
@@ -130,19 +133,19 @@ const config = {
             position: "left",
             items: [
               {
-                label: "Node Tutorials",
+                label: "Install Node",
                 type: "doc",
-                docId: "tutorials/run-a-local-testnet",
+                docId: "nodes/run-a-local-testnet",
               },
               {
                 label: "Aptos Blockchain Deployments",
                 type: "doc",
-                docId: "tutorials/local-testnet-devnet-incentivized-testnet",
+                docId: "nodes/aptos-deployments",
               },
               {
                 label: "Incentivized Testnet",
                 type: "doc",
-                docId: "tutorials/validator-node/intro",
+                docId: "nodes/validator-node/index",
               },
             ],
           },
@@ -235,7 +238,7 @@ const config = {
       {
         redirects: [
           {
-            to: "/tutorials/full-node/run-a-fullnode",
+            to: "/nodes/full-node/fullnode-for-devnet",
             from: "/tutorials/run-a-fullnode",
           },
         ],
