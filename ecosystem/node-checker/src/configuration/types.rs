@@ -3,7 +3,10 @@
 
 #![allow(dead_code)]
 
-use crate::{metric_evaluator::StateSyncMetricsEvaluatorArgs, runner::BlockingRunnerArgs};
+use crate::{
+    metric_evaluator::{ConsensusMetricsEvaluatorArgs, StateSyncMetricsEvaluatorArgs},
+    runner::BlockingRunnerArgs,
+};
 use anyhow::Result;
 use clap::Parser;
 use once_cell::sync::Lazy;
@@ -96,6 +99,9 @@ impl NodeConfiguration {
 pub struct EvaluatorArgs {
     #[clap(flatten)]
     pub state_sync_evaluator_args: StateSyncMetricsEvaluatorArgs,
+
+    #[clap(flatten)]
+    pub consensus_evaluator_args: ConsensusMetricsEvaluatorArgs,
 }
 
 #[derive(Clone, Debug, Deserialize, Parser, PoemObject, Serialize)]
