@@ -10,7 +10,6 @@ use crate::{
     metric_evaluator::{EvaluationSummary, MetricsEvaluatorError},
 };
 
-// TODO: Consider using thiserror.
 // todo: Rename MetricsEvaluator to MetricEvaluator
 
 #[derive(Debug, ThisError)]
