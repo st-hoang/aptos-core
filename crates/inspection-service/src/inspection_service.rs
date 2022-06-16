@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{gather_metrics, json_encoder::JsonEncoder, NUM_METRICS};
-use futures::future;
+use aptos_config::config::NodeConfig;
 use hyper::{
     service::{make_service_fn, service_fn},
     Body, Method, Request, Response, Server, StatusCode,
@@ -13,6 +13,7 @@ use prometheus::{
 };
 use std::{
     collections::HashMap,
+    convert::Infallible,
     net::{SocketAddr, ToSocketAddrs},
     thread,
 };
@@ -76,26 +77,40 @@ pub fn get_all_metrics() -> HashMap<String, String> {
     get_metrics(all_metric_families)
 }
 
-async fn serve_metrics(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+async fn serve_requests(
+    req: Request<Body>,
+    node_config: NodeConfig,
+) -> Result<Response<Body>, hyper::Error> {
     let mut resp = Response::new(Body::empty());
     match (req.method(), req.uri().path()) {
+        // Expose the node configuration
+        (&Method::GET, "/configuration") => {
+            let encoded_configuration = serde_json::to_string(&node_config).unwrap();
+            *resp.body_mut() = Body::from(encoded_configuration);
+        }
+        // Exposes JSON encoded metrics
+        (&Method::GET, "/json_metrics") => {
+            let encoder = JsonEncoder;
+            let buffer = encode_metrics(encoder);
+            *resp.body_mut() = Body::from(buffer);
+        }
+        // Exposes text encoded metrics
         (&Method::GET, "/metrics") => {
-            // Prometheus server expects metrics to be on host:port/metrics
             let encoder = TextEncoder::new();
             let buffer = encode_metrics(encoder);
             *resp.body_mut() = Body::from(buffer);
         }
-        // Expose system information to host:port/system_information
+        // Exposes forge encoded metrics (this is currently only used by forge).
+        (&Method::GET, "/forge_metrics") => {
+            let metrics = get_all_metrics();
+            let encoded_metrics = serde_json::to_string(&metrics).unwrap();
+            *resp.body_mut() = Body::from(encoded_metrics);
+        }
+        // Expose the system and build information
         (&Method::GET, "/system_information") => {
             let system_information = aptos_telemetry::utils::get_system_and_build_information(None);
             let encoded_information = serde_json::to_string(&system_information).unwrap();
             *resp.body_mut() = Body::from(encoded_information);
-        }
-        (&Method::GET, "/counters") => {
-            // Json encoded aptos_metrics;
-            let encoder = JsonEncoder;
-            let buffer = encode_metrics(encoder);
-            *resp.body_mut() = Body::from(buffer);
         }
         _ => {
             *resp.status_mut() = StatusCode::NOT_FOUND;
@@ -105,27 +120,43 @@ async fn serve_metrics(req: Request<Body>) -> Result<Response<Body>, hyper::Erro
     Ok(resp)
 }
 
-pub fn start_server(host: String, port: u16) {
+pub fn start_inspection_service(node_config: NodeConfig) {
+    // Fetch the service port and address
+    let service_port = node_config.inspection_service.port;
+    let service_address = node_config.inspection_service.address.clone();
+
     // Only called from places that guarantee that host is parsable, but this must be assumed.
-    let addr: SocketAddr = (host.as_str(), port)
+    let addr: SocketAddr = (service_address.as_str(), service_port)
         .to_socket_addrs()
-        .unwrap_or_else(|_| unreachable!("Failed to parse {}:{} as address", host, port))
+        .unwrap_or_else(|_| {
+            unreachable!(
+                "Failed to parse {}:{} as address",
+                service_address, service_port
+            )
+        })
         .next()
         .unwrap();
 
-    // Spawn the metric server
+    // Spawn the server
     thread::spawn(move || {
-        let make_service =
-            make_service_fn(|_| future::ok::<_, hyper::Error>(service_fn(serve_metrics)));
+        let make_service = make_service_fn(move |_conn| {
+            let node_config = node_config.clone();
+            async move {
+                Ok::<_, Infallible>(service_fn(move |request| {
+                    serve_requests(request, node_config.clone())
+                }))
+            }
+        });
 
-        let rt = runtime::Builder::new_current_thread()
+        let runtime = runtime::Builder::new_current_thread()
             .enable_io()
             .build()
             .unwrap();
-        rt.block_on(async {
-            let server = Server::bind(&addr).serve(make_service);
-            server.await
-        })
-        .unwrap();
+        runtime
+            .block_on(async {
+                let server = Server::bind(&addr).serve(make_service);
+                server.await
+            })
+            .unwrap();
     });
 }
