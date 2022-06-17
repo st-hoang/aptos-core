@@ -24,6 +24,9 @@ Rails.application.routes.draw do
     root to: redirect('/it1') # creates user_root_path, where users go after confirming email
   end
 
+  # Discourse SSO
+  get 'discourse/sso', to: 'discourse#sso'
+
   # KYC routes
   get 'onboarding/kyc_redirect', to: 'onboarding#kyc_redirect'
   get 'onboarding/kyc_callback', to: 'onboarding#kyc_callback'
