@@ -1,12 +1,16 @@
 // Copyright (c) Aptos
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{context::Context, index, tests::pretty};
+use crate::{
+    context::Context,
+    index,
+    tests::{golden_output::GoldenOutputs, pretty},
+};
 use aptos_api_types::{
     mime_types, HexEncodedBytes, TransactionOnChainData, X_APTOS_CHAIN_ID,
     X_APTOS_LEDGER_TIMESTAMP, X_APTOS_LEDGER_VERSION,
 };
-use aptos_config::config::ApiConfig;
+use aptos_config::config::NodeConfig;
 use aptos_crypto::{hash::HashValue, SigningKey};
 use aptos_genesis_tool::validator_builder::{RootKeys, ValidatorBuilder};
 use aptos_global_constants::OWNER_ACCOUNT;
@@ -31,18 +35,14 @@ use aptos_types::{
 use aptos_vm::AptosVM;
 use aptosdb::AptosDB;
 use bytes::Bytes;
-use executor::db_bootstrapper;
+use executor::{block_executor::BlockExecutor, db_bootstrapper};
 use executor_types::BlockExecutorTrait;
 use hyper::Response;
 use mempool_notifications::MempoolNotificationSender;
-use storage_interface::DbReaderWriter;
-
-use crate::tests::golden_output::GoldenOutputs;
-use executor::block_executor::BlockExecutor;
 use rand::SeedableRng;
 use serde_json::{json, Value};
 use std::{boxed::Box, collections::BTreeMap, iter::once, sync::Arc};
-use storage_interface::state_view::DbStateView;
+use storage_interface::{state_view::DbStateView, DbReaderWriter};
 use vm_validator::vm_validator::VMValidator;
 use warp::http::header::CONTENT_TYPE;
 
@@ -71,7 +71,7 @@ pub fn new_test_context(test_name: &'static str) -> TestContext {
             ChainId::test(),
             db.clone(),
             mempool.ac_client.clone(),
-            ApiConfig::default(),
+            NodeConfig::default(),
         ),
         rng,
         root_keys,
