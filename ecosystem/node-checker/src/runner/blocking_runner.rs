@@ -17,6 +17,7 @@ use log::debug;
 use poem_openapi::Object as PoemObject;
 use prometheus_parse::Scrape as PrometheusScrape;
 use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 
 #[derive(Clone, Debug, Deserialize, Parser, PoemObject, Serialize)]
 pub struct BlockingRunnerArgs {

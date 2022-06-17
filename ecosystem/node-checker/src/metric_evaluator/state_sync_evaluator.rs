@@ -5,7 +5,7 @@ use super::{
     common::{get_metric, GetMetricResult, Label},
     MetricsEvaluator, MetricsEvaluatorError,
 };
-use crate::evaluator::EvaluationResult;
+use crate::evaluator::{EvaluationResult, Evaluator};
 use anyhow::Result;
 use clap::Parser;
 use log::debug;
@@ -188,7 +188,9 @@ impl MetricsEvaluator for StateSyncMetricsEvaluator {
 
         Ok(evaluation_results)
     }
+}
 
+impl Evaluator for StateSyncMetricsEvaluator {
     fn get_name(&self) -> String {
         NAME.to_string()
     }

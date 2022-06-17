@@ -5,7 +5,10 @@ use super::{
     get_value, GetValueResult, SystemInformationEvaluator, SystemInformationEvaluatorError,
     EVALUATOR_SOURCE,
 };
-use crate::{evaluator::EvaluationResult, metric_collector::SystemInformation};
+use crate::{
+    evaluator::{EvaluationResult, Evaluator},
+    metric_collector::SystemInformation,
+};
 use anyhow::Result;
 use clap::Parser;
 use log::debug;
@@ -116,7 +119,9 @@ impl SystemInformationEvaluator for BuildVersionEvaluator {
 
         Ok(evaluation_results)
     }
+}
 
+impl Evaluator for BuildVersionEvaluator {
     fn get_name(&self) -> String {
         BUILD_VERSION_EVALUATOR_NAME.to_string()
     }

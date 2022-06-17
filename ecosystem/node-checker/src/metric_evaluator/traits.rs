@@ -1,9 +1,10 @@
 // Copyright (c) Aptos
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::evaluator::EvaluationResult;
+use crate::evaluator::{EvaluationResult, Evaluator};
 use anyhow::Result;
 use prometheus_parse::Scrape as PrometheusScrape;
+use std::fmt::Debug;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
@@ -33,7 +34,7 @@ pub enum MetricsEvaluatorError {
 ///      to be used across async boundaries
 ///
 ///  - 'static is required because this will be stored on the todo which needs to be 'static
-pub trait MetricsEvaluator: Sync + Send {
+pub trait MetricsEvaluator: Debug + Evaluator + Sync + Send {
     fn evaluate_metrics(
         &self,
         previous_baseline_metrics: &PrometheusScrape,
@@ -41,13 +42,4 @@ pub trait MetricsEvaluator: Sync + Send {
         latest_baseline_metrics: &PrometheusScrape,
         latest_target_metrics: &PrometheusScrape,
     ) -> Result<Vec<EvaluationResult>, MetricsEvaluatorError>;
-
-    /// todo
-    fn get_name(&self) -> String;
-}
-
-impl std::fmt::Debug for dyn MetricsEvaluator {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(fmt, "MetricsEvaluator {{ name: {:?} }}", self.get_name())
-    }
 }

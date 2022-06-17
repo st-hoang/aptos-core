@@ -3,8 +3,12 @@
 
 #![allow(dead_code)]
 
-use crate::{evaluator::EvaluationResult, metric_collector::SystemInformation};
+use crate::{
+    evaluator::{EvaluationResult, Evaluator},
+    metric_collector::SystemInformation,
+};
 use anyhow::Result;
+use std::fmt::Debug;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
@@ -22,22 +26,10 @@ pub enum SystemInformationEvaluatorError {
 
 /// This trait defines evaluators that operate on the data from /system_information
 /// on the metrics port.
-pub trait SystemInformationEvaluator: Sync + Send {
+pub trait SystemInformationEvaluator: Debug + Evaluator + Sync + Send {
     fn evaluate_system_information(
         &self,
         baseline_system_information: &SystemInformation,
         target_system_information: &SystemInformation,
     ) -> Result<Vec<EvaluationResult>, SystemInformationEvaluatorError>;
-
-    fn get_name(&self) -> String;
-}
-
-impl std::fmt::Debug for dyn SystemInformationEvaluator {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(
-            fmt,
-            "SystemInformationEvaluator {{ name: {:?} }}",
-            self.get_name()
-        )
-    }
 }

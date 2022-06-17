@@ -8,7 +8,7 @@ use super::{
     },
     CONSENSUS_EVALUATOR_SOURCE,
 };
-use crate::evaluator::EvaluationResult;
+use crate::evaluator::{EvaluationResult, Evaluator};
 use anyhow::Result;
 use clap::Parser;
 use log::debug;
@@ -139,7 +139,9 @@ impl MetricsEvaluator for ConsensusProposalsEvaluator {
 
         Ok(evaluation_results)
     }
+}
 
+impl Evaluator for ConsensusProposalsEvaluator {
     fn get_name(&self) -> String {
         CONSENSUS_PROPOSALS_EVALUATOR_NAME.to_string()
     }
