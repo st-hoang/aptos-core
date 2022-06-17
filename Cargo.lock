@@ -804,13 +804,15 @@ dependencies = [
  "clap 3.1.18",
  "env_logger 0.8.4",
  "futures",
- "humantime 2.1.0",
  "log",
  "once_cell",
  "poem",
  "poem-openapi",
  "prometheus-parse",
  "reqwest",
+ "serde 1.0.137",
+ "serde_json",
+ "serde_yaml",
  "thiserror",
  "tokio",
  "url",
@@ -6408,6 +6410,7 @@ dependencies = [
  "serde_yaml",
  "thiserror",
  "tokio",
+ "url",
 ]
 
 [[package]]
@@ -9186,6 +9189,7 @@ dependencies = [
  "idna",
  "matches",
  "percent-encoding",
+ "serde 1.0.137",
 ]
 
 [[package]]
