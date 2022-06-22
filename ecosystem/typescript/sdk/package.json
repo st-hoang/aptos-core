@@ -16,7 +16,8 @@
     "fmt": "yarn _fmt --write",
     "fmt:check": "yarn _fmt --check",
     "cov:clean": "rm -rf coverage",
-    "changelog": "standard-version --skip.bump --skip.commit --skip.tag"
+    "changelog": "standard-version --skip.bump --skip.commit --skip.tag",
+    "prepare": "cd ../../.. && husky install ecosystem/typescript/sdk/.husky"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,8 @@
     "Move"
   ],
   "devDependencies": {
+    "@commitlint/cli": "^17.0.2",
+    "@commitlint/config-conventional": "^17.0.2",
     "@types/jest": "^27.4.1",
     "@types/node": "^17.0.23",
     "@typescript-eslint/eslint-plugin": "^5.17.0",
@@ -41,8 +44,11 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.25.4",
+    "husky": "^8.0.1",
     "jest": "^27.5.1",
+    "lint-staged": "^13.0.2",
     "prettier": "^2.6.2",
+    "pretty-quick": "^3.1.3",
     "standard-version": "^9.5.0",
     "ts-jest": "^27.1.4",
     "ts-loader": "^9.2.8",
