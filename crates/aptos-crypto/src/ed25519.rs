@@ -39,8 +39,8 @@ use anyhow::{anyhow, Result};
 use aptos_crypto_derive::{DeserializeKey, SerializeKey, SilentDebug, SilentDisplay};
 use core::convert::TryFrom;
 use mirai_annotations::*;
-use serde::Serialize;
-use std::{cmp::Ordering, fmt};
+use serde::{Deserialize, Serialize};
+use std::{cmp::Ordering, fmt, hash::Hash};
 
 pub use ed25519_dalek;
 
@@ -215,10 +215,23 @@ impl Ed25519Signature {
         if bytes.len() != ED25519_SIGNATURE_LENGTH {
             return Err(CryptoMaterialError::WrongLengthError);
         }
-        if !check_s_lt_l(&bytes[32..]) {
+        if !Ed25519Signature::check_s_lt_l(&bytes[32..]) {
             return Err(CryptoMaterialError::CanonicalRepresentationError);
         }
         Ok(())
+    }
+
+    /// Check if S < L to capture invalid signatures.
+    fn check_s_lt_l(s: &[u8]) -> bool {
+        for i in (0..32).rev() {
+            match s[i].cmp(&L[i]) {
+                Ordering::Less => return true,
+                Ordering::Greater => return false,
+                _ => {}
+            }
+        }
+        // As this stage S == L which implies a non canonical S.
+        false
     }
 }
 
@@ -355,6 +368,7 @@ impl TryFrom<&[u8]> for Ed25519PublicKey {
 
     /// Deserialize an Ed25519PublicKey. This method will also check for key validity, for instance
     ///  it will only deserialize keys that are safe against small subgroup attacks.
+    /// TODO(Alin): Ugh, that's not what from_bytes_unchecked does
     fn try_from(bytes: &[u8]) -> std::result::Result<Ed25519PublicKey, CryptoMaterialError> {
         Ed25519PublicKey::from_bytes_unchecked(bytes)
     }
@@ -494,18 +508,166 @@ impl fmt::Debug for Ed25519Signature {
     }
 }
 
-/// Check if S < L to capture invalid signatures.
-fn check_s_lt_l(s: &[u8]) -> bool {
-    for i in (0..32).rev() {
-        match s[i].cmp(&L[i]) {
-            Ordering::Less => return true,
-            Ordering::Greater => return false,
-            _ => {}
+////////////////////////
+// Validatable traits //
+////////////////////////
+
+/// An unvalidated `Ed25519PublicKey`
+#[derive(Debug, Clone, Eq)]
+pub struct UnvalidatedEd25519PublicKey([u8; ED25519_PUBLIC_KEY_LENGTH]);
+
+impl UnvalidatedEd25519PublicKey {
+    /// Return key as bytes
+    pub fn to_bytes(&self) -> [u8; ED25519_PUBLIC_KEY_LENGTH] {
+        self.0
+    }
+}
+
+impl Serialize for UnvalidatedEd25519PublicKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if serializer.is_human_readable() {
+            let encoded = ::hex::encode(&self.0);
+            serializer.serialize_str(&format!("0x{}", encoded))
+        } else {
+            // See comment in deserialize_key.
+            serializer.serialize_newtype_struct(
+                "Ed25519PublicKey",
+                serde_bytes::Bytes::new(self.0.as_ref()),
+            )
         }
     }
-    // As this stage S == L which implies a non canonical S.
-    false
 }
+
+impl<'de> Deserialize<'de> for UnvalidatedEd25519PublicKey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        use serde::de::Error;
+
+        if deserializer.is_human_readable() {
+            let encoded_key = <String>::deserialize(deserializer)?;
+            let bytes_out = ::hex::decode(&encoded_key[2..]).map_err(D::Error::custom)?;
+            <[u8; ED25519_PUBLIC_KEY_LENGTH]>::try_from(bytes_out.as_ref())
+                .map(UnvalidatedEd25519PublicKey)
+                .map_err(D::Error::custom)
+        } else {
+            // In order to preserve the Serde data model and help analysis tools,
+            // make sure to wrap our value in a container with the same name
+            // as the original type.
+            #[derive(Deserialize)]
+            #[serde(rename = "Ed25519PublicKey")]
+            struct Value<'a>(&'a [u8]);
+
+            let value = Value::deserialize(deserializer)?;
+            <[u8; ED25519_PUBLIC_KEY_LENGTH]>::try_from(value.0)
+                .map(UnvalidatedEd25519PublicKey)
+                .map_err(D::Error::custom)
+        }
+    }
+}
+
+impl Hash for UnvalidatedEd25519PublicKey {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        state.write(&self.0)
+    }
+}
+
+impl PartialEq for UnvalidatedEd25519PublicKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Validate for Ed25519PublicKey {
+    type Unvalidated = UnvalidatedEd25519PublicKey;
+
+    fn validate(unvalidated: &Self::Unvalidated) -> Result<Self> {
+        Self::try_from(unvalidated.0.as_ref()).map_err(Into::into)
+    }
+
+    fn to_unvalidated(&self) -> Self::Unvalidated {
+        UnvalidatedEd25519PublicKey(self.to_bytes())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        ed25519::{Ed25519PrivateKey, Ed25519PublicKey},
+        test_utils::uniform_keypair_strategy,
+        validatable::{UnvalidatedEd25519PublicKey, Validate},
+    };
+    use proptest::prelude::*;
+    use std::{
+        collections::hash_map::DefaultHasher,
+        hash::{Hash, Hasher},
+    };
+
+    proptest! {
+        #[test]
+        fn unvalidated_ed25519_public_key_equivalence(
+            keypair in uniform_keypair_strategy::<Ed25519PrivateKey, Ed25519PublicKey>()
+        ) {
+            let valid = keypair.public_key;
+            let unvalidated = valid.to_unvalidated();
+
+            prop_assert_eq!(&unvalidated, &UnvalidatedEd25519PublicKey(valid.to_bytes()));
+            prop_assert_eq!(&valid, &Ed25519PublicKey::validate(&unvalidated).unwrap());
+
+            // Ensure Serialize and Deserialize are implemented the same
+
+            // BCS - A non-human-readable format
+            {
+                let serialized_valid = bcs::to_bytes(&valid).unwrap();
+                let serialized_unvalidated = bcs::to_bytes(&unvalidated).unwrap();
+                prop_assert_eq!(&serialized_valid, &serialized_unvalidated);
+
+                let deserialized_valid_from_unvalidated: Ed25519PublicKey = bcs::from_bytes(&serialized_unvalidated).unwrap();
+                let deserialized_unvalidated_from_valid: UnvalidatedEd25519PublicKey = bcs::from_bytes(&serialized_valid).unwrap();
+
+                prop_assert_eq!(&valid, &deserialized_valid_from_unvalidated);
+                prop_assert_eq!(&unvalidated, &deserialized_unvalidated_from_valid);
+            }
+
+            // JSON A human-readable format
+            {
+                let serialized_valid = serde_json::to_string(&valid).unwrap();
+                let serialized_unvalidated = serde_json::to_string(&unvalidated).unwrap();
+                prop_assert_eq!(&serialized_valid, &serialized_unvalidated);
+
+                let deserialized_valid_from_unvalidated: Ed25519PublicKey = serde_json::from_str(&serialized_unvalidated).unwrap();
+                let deserialized_unvalidated_from_valid: UnvalidatedEd25519PublicKey = serde_json::from_str(&serialized_valid).unwrap();
+
+                prop_assert_eq!(&valid, &deserialized_valid_from_unvalidated);
+                prop_assert_eq!(&unvalidated, &deserialized_unvalidated_from_valid);
+            }
+
+
+            // Ensure Hash is implemented the same
+            let valid_hash = {
+                let mut hasher = DefaultHasher::new();
+                valid.hash(&mut hasher);
+                hasher.finish()
+            };
+
+            let unvalidated_hash = {
+                let mut hasher = DefaultHasher::new();
+                unvalidated.hash(&mut hasher);
+                hasher.finish()
+            };
+
+            prop_assert_eq!(valid_hash, unvalidated_hash);
+        }
+    }
+}
+
+/////////////
+// Fuzzing //
+/////////////
 
 #[cfg(any(test, feature = "fuzzing"))]
 use crate::test_utils::{self, KeyPair};
@@ -516,6 +678,7 @@ pub fn keypair_strategy() -> impl Strategy<Value = KeyPair<Ed25519PrivateKey, Ed
     test_utils::uniform_keypair_strategy::<Ed25519PrivateKey, Ed25519PublicKey>()
 }
 
+use crate::validatable::Validate;
 #[cfg(any(test, feature = "fuzzing"))]
 use proptest::prelude::*;
 
