@@ -86,6 +86,13 @@ resource "helm_release" "genesis" {
       genesis = {
         numValidators   = var.num_validators
         username_prefix = local.aptos_node_helm_prefix
+        domain = local.domain
+        validator = {
+          enable_onchain_discovery = false
+        }
+        fullnode = {
+          enable_onchain_discovery = true
+        }
       }
     }),
     jsonencode(var.genesis_helm_values)

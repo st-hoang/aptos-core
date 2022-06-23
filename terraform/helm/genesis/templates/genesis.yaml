@@ -107,6 +107,16 @@ spec:
           value: {{ .Values.chain.era | quote }}
         - name: MOVE_MODULES_DIR
           value: {{ .Values.genesis.moveModulesDir | quote }}
+        - name: DOMAIN
+          value: {{ .Values.genesis.domain | quote }}
+        - name: VALIDATOR_ENABLE_ONCHAIN_DISCOVERY
+          value: {{ .Values.genesis.validator.enable_onchain_discovery | quote }}
+        - name: FULLNODE_ENABLE_ONCHAIN_DISCOVERY
+          value: {{ .Values.genesis.fullnode.enable_onchain_discovery | quote }}
+        - name: VALIDATOR_INTERNAL_HOST_SUFFIX
+          value: {{ .Values.genesis.validator.internal_host_suffix | quote }}
+        - name: FULLNODE_INTERNAL_HOST_SUFFIX
+          value: {{ .Values.genesis.fullnode.internal_host_suffix | quote }}
         volumeMounts:
         - name: layout
           mountPath: /tmp/layout.yaml
