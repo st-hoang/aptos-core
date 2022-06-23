@@ -6,7 +6,8 @@ import { AnyObject } from './util';
 import { FAUCET_URL, NODE_URL } from './util.test';
 import { FaucetClient } from './faucet_client';
 import { AptosAccount } from './aptos_account';
-import { TxnBuilderTypes, TransactionBuilderMultiEd25519, BCS } from './transaction_builder';
+import { TxnBuilderTypes, TransactionBuilderMultiEd25519, BCS, TransactionBuilder } from './transaction_builder';
+import { TokenClient } from './token_client';
 
 test('gets genesis account', async () => {
   const client = new AptosClient(NODE_URL);
@@ -224,6 +225,121 @@ test(
     resources = await client.getAccountResources(account4.address());
     accountResource = resources.find((r) => r.type === '0x1::Coin::CoinStore<0x1::TestCoin::TestCoin>');
     expect((accountResource.data as any).coin.value).toBe('123');
+  },
+  30 * 1000,
+);
+
+test(
+  'submits multiagent transaction',
+  async () => {
+    const client = new AptosClient(NODE_URL);
+    const faucetClient = new FaucetClient(NODE_URL, FAUCET_URL);
+    const tokenClient = new TokenClient(client);
+
+    const alice = new AptosAccount();
+    const bob = new AptosAccount();
+    const aliceAccountAddress = TxnBuilderTypes.AccountAddress.fromHex(alice.address());
+    const bobAccountAddress = TxnBuilderTypes.AccountAddress.fromHex(bob.address());
+
+    await faucetClient.fundAccount(alice.address(), 5000);
+
+    let resources = await client.getAccountResources(alice.address());
+    let accountResource = resources.find((r) => r.type === '0x1::Coin::CoinStore<0x1::TestCoin::TestCoin>');
+    expect((accountResource.data as any).coin.value).toBe('5000');
+
+    await faucetClient.fundAccount(bob.address(), 6000);
+    resources = await client.getAccountResources(bob.address());
+    accountResource = resources.find((r) => r.type === '0x1::Coin::CoinStore<0x1::TestCoin::TestCoin>');
+    expect((accountResource.data as any).coin.value).toBe('6000');
+
+    const collectionName = 'AliceCollection';
+    const tokenName = 'Alice Token';
+
+    // Create collection and token on Alice's account
+    // eslint-disable-next-line quotes
+    await tokenClient.createCollection(alice, collectionName, "Alice's simple collection", 'https://aptos.dev');
+
+    await tokenClient.createToken(
+      alice,
+      collectionName,
+      tokenName,
+      // eslint-disable-next-line quotes
+      "Alice's simple token",
+      1,
+      'https://aptos.dev/img/nyan.jpeg',
+      0,
+    );
+
+    let aliceBalance = await tokenClient.getTokenBalance(alice.address().hex(), collectionName, tokenName);
+    expect(aliceBalance.value).toBe('1');
+
+    const scriptFunctionPayload = new TxnBuilderTypes.TransactionPayloadScriptFunction(
+      TxnBuilderTypes.ScriptFunction.natual(
+        '0x1::Token',
+        'direct_transfer_script',
+        [],
+        [
+          BCS.bcsToBytes(aliceAccountAddress),
+          BCS.bcsSerializeStr(collectionName),
+          BCS.bcsSerializeStr(tokenName),
+          BCS.bcsSerializeUint64(1),
+        ],
+      ),
+    );
+
+    const [{ sequence_number: sequnceNumber }, chainId] = await Promise.all([
+      client.getAccount(alice.address()),
+      client.getChainId(),
+    ]);
+
+    const rawTxn = new TxnBuilderTypes.RawTransaction(
+      aliceAccountAddress,
+      BigInt(sequnceNumber),
+      scriptFunctionPayload,
+      1000n,
+      1n,
+      BigInt(Math.floor(Date.now() / 1000) + 10),
+      new TxnBuilderTypes.ChainId(chainId),
+    );
+
+    const multiAgentTxn = new TxnBuilderTypes.MultiAgentRawTransaction(rawTxn, [bobAccountAddress]);
+
+    const aliceSignature = new TxnBuilderTypes.Ed25519Signature(
+      alice.signBuffer(TransactionBuilder.getSigningMessage(multiAgentTxn)).toUint8Array(),
+    );
+
+    const aliceAuthenticator = new TxnBuilderTypes.AccountAuthenticatorEd25519(
+      new TxnBuilderTypes.Ed25519PublicKey(alice.signingKey.publicKey),
+      aliceSignature,
+    );
+
+    const bobSignature = new TxnBuilderTypes.Ed25519Signature(
+      bob.signBuffer(TransactionBuilder.getSigningMessage(multiAgentTxn)).toUint8Array(),
+    );
+
+    const bobAuthenticator = new TxnBuilderTypes.AccountAuthenticatorEd25519(
+      new TxnBuilderTypes.Ed25519PublicKey(bob.signingKey.publicKey),
+      bobSignature,
+    );
+
+    const multiAgentAuthenticator = new TxnBuilderTypes.TransactionAuthenticatorMultiAgent(
+      aliceAuthenticator, // sender authenticator
+      [bobAccountAddress], // secondary signer addresses
+      [bobAuthenticator], // secondary signer authenticators
+    );
+
+    const bcsTxn = BCS.bcsToBytes(new TxnBuilderTypes.SignedTransaction(rawTxn, multiAgentAuthenticator));
+
+    const transactionRes = await client.submitSignedBCSTransaction(bcsTxn);
+
+    await client.waitForTransaction(transactionRes.hash);
+
+    const transaction = await client.transactions.getTransaction(transactionRes.hash);
+    expect((transaction.data as any)?.success).toBe(true);
+
+    aliceBalance = await tokenClient.getTokenBalance(alice.address().hex(), collectionName, tokenName);
+
+    expect(aliceBalance.value).toBe('0');
   },
   30 * 1000,
 );
