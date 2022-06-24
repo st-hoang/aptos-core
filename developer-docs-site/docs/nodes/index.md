@@ -11,11 +11,9 @@ hide_table_of_contents: false
 - **Looking for the Aptos Incentivized Testnet-2 (AIT-2) program?** [Click here](ait/ait-2). 
 :::
 
-This section contains guides for the Aptos nodes. Follow these guides for staking on the Aptos Blockchain, and to install an Aptos node for a local testnet, the Aptos Incentivized Testnet, the Aptos devnet and for the Aptos production network.
+This section contains guides for the Aptos nodes. Topics covered include how to install an Aptos node, and staking on the Aptos Blockchain.
 
 ## For the Aptos devnet 
-
-
 
 <div class="docs-card-container">
 <div class="row row-cols-1 row-cols-md-2 g-4">
