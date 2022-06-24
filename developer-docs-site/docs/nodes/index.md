@@ -6,20 +6,14 @@ hide_table_of_contents: false
 
 # Nodes
 
+:::tip Before you proceed
+- Read [Aptos Blockchain Deployments](aptos-deployments) for the **differences between** deploying for a local testnet, for the Aptos devnet and for the Aptos incentivized testnet.
+- **Looking for the Aptos Incentivized Testnet-2 (AIT-2) program?** [Click here](ait/ait-2). 
+:::
+
 This section contains guides for the Aptos nodes. Follow these guides for staking on the Aptos Blockchain, and to install an Aptos node for a local testnet, the Aptos Incentivized Testnet, the Aptos devnet and for the Aptos production network.
 
-:::tip Aptos Incentivized Testnet-2 (AIT-2)
-Click [here for the Aptos Incentivized Testnet-2 program](ait/ait-2). 
-:::
-
-
-
-
 ## For the Aptos devnet 
-
-:::tip Before you proceed
-Read [Aptos Blockchain Deployments](aptos-deployments) for the differences between deploying for a local testnet, for the Aptos devnet and for the Aptos incentivized testnet.
-:::
 
 
 
@@ -78,7 +72,7 @@ Read [Aptos Blockchain Deployments](aptos-deployments) for the differences betwe
    <div class="col">
     <div class="card h-100" >
     <div class="card-body d-flex flex-column" >
-    <h2 class="card-title">Staking in the Aptos Testnet </h2>
+    <h2 class="card-title">Staking on the Aptos Testnet </h2>
     <p class="card-text">Pick your preferred method from below:</p>
     <ul class="list-group list-group-flush">
       <li class="list-group-item"><a href="run-a-local-testnet" class="card-link">Using Aptos source</a></li>

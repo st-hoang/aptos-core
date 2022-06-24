@@ -24,7 +24,7 @@ To participate in the Aptos Incentivized Testnet-2 (AIT-2) program, follow the b
     <div class="card h-100">
      <h3 class="card-header">Step 2</h3>
       <div class="card-body d-flex flex-column">
-      <a href="#install-the-nodes-for-ait-2" class="card-title card-link stretched-link"> <h2>Install the nodes for the AIT-2</h2></a>
+      <a href="#install-the-nodes-for-ait-2" class="card-title card-link stretched-link"> <h2>Install the nodes</h2></a>
         <p class="card-text">Ready to dive in? Follow these guides to install and set up the nodes for the AIT-2.</p>     
       </div>
     </div>
