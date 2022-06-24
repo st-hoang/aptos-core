@@ -117,13 +117,13 @@ const config = {
               },
               {
                 type: "doc",
-                label: "Your First NFT",
-                docId: "tutorials/your-first-nft",
+                label: "Your First Coin",
+                docId: "tutorials/first-coin",
               },
               {
                 type: "doc",
-                label: "Your First Coin",
-                docId: "tutorials/first-coin",
+                label: "Your First NFT",
+                docId: "tutorials/your-first-nft",
               },
             ],
           },
@@ -133,19 +133,29 @@ const config = {
             position: "left",
             items: [
               {
-                label: "Install Node",
-                type: "doc",
-                docId: "nodes/run-a-local-testnet",
-              },
-              {
                 label: "Aptos Blockchain Deployments",
                 type: "doc",
                 docId: "nodes/aptos-deployments",
               },
               {
-                label: "Incentivized Testnet",
+                label: "Validators",
                 type: "doc",
                 docId: "nodes/validator-node/index",
+              },
+              {
+                label: "FullNodes",
+                type: "doc",
+                docId: "nodes/full-node/index",
+              },
+              {
+                label: "Local Testnet",
+                type: "doc",
+                docId: "nodes/run-a-local-testnet",
+              },
+              {
+                label: "Staking",
+                type: "doc",
+                docId: "nodes/staking/staking-on-aptos",
               },
             ],
           },

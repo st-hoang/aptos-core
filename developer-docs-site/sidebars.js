@@ -21,7 +21,7 @@ const sidebars = {
     {
       type: "category",
       label: "Aptos Quickstarts",
-      link: {type: "doc", id: "tutorials/index"},
+      link: { type: "doc", id: "tutorials/index" },
       collapsible: true,
       collapsed: true,
       items: [
@@ -48,7 +48,7 @@ const sidebars = {
         "concepts/basics-node-networks-sync",
       ],
     },
-    
+
     {
       type: "category",
       label: "Guides",
@@ -62,11 +62,11 @@ const sidebars = {
         "tutorials/building-wallet-extension",
       ],
     },
-    
+
     {
       type: "category",
       label: "Nodes",
-      link: {type: "doc", id: "nodes/index"},
+      link: { type: "doc", id: "nodes/index" },
       collapsible: true,
       collapsed: true,
       items: [
@@ -74,18 +74,15 @@ const sidebars = {
         {
           type: "category",
           label: "AIT-2",
-          link: {type: "doc", id: "nodes/ait/index"},
+          link: { type: "doc", id: "nodes/ait/index" },
           collapsible: true,
           collapsed: true,
-          items: [
-            "nodes/ait/node-liveness-criteria",
-            "nodes/ait/connect-to-testnet",
-          ],
+          items: ["nodes/ait/node-liveness-criteria", "nodes/ait/connect-to-testnet"],
         },
         {
           type: "category",
           label: "Validators",
-          link: {type: "doc", id: "nodes/validator-node/index"},
+          link: { type: "doc", id: "nodes/validator-node/index" },
           collapsible: true,
           collapsed: true,
           items: [
@@ -95,13 +92,12 @@ const sidebars = {
             "nodes/validator-node/using-gcp",
             "nodes/validator-node/using-docker",
             "nodes/validator-node/using-source-code",
-            
           ],
-        },  
+        },
         {
           type: "category",
           label: "FullNode for Devnet",
-          link: {type: "doc", id: "nodes/full-node/index"},
+          link: { type: "doc", id: "nodes/full-node/index" },
           collapsible: true,
           collapsed: true,
           items: [
@@ -125,8 +121,8 @@ const sidebars = {
         {
           type: "link",
           label: "Typescript SDK",
-          href: "https://aptos-labs.github.io/ts-sdk-doc/",            
-        }
+          href: "https://aptos-labs.github.io/ts-sdk-doc/",
+        },
       ],
     },
     {
@@ -138,8 +134,8 @@ const sidebars = {
         {
           type: "link",
           label: "REST API",
-          href: "/rest-api",            
-        }
+          href: "/rest-api",
+        },
       ],
     },
     "reference/telemetry",

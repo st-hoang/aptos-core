@@ -1,12 +1,11 @@
 ---
-title: "Introduction"
-slug: "intro"
-sidebar_position: 10
+title: "Validators"
+slug: "validators"
 ---
 
-# Introduction
+# Validators
 
-
+WORK IN PROGRESS. 
 
 :::info
 

@@ -3,7 +3,7 @@ title: "AIT-2"
 slug: "ait-2"
 ---
 
-# AIT-2 
+# AIT-2
 
 <p class="card-section-h2">Welcome to AIT-2</p>
 
@@ -33,13 +33,12 @@ To participate in the Aptos Incentivized Testnet-2 (AIT-2) program, follow the b
     <div class="card h-100">
      <h3 class="card-header">Step 3</h3>
       <div class="card-body d-flex flex-column">
-      <a href="#staking-for-the-ait-2" class="card-title card-link stretched-link"> <h2>Stake for the AIT-2</h2></a>
-        <p class="card-text">Selected for the AIT-2? Follow this guide and stake your Aptos coins.</p>     
+      <a href="#staking-for-the-ait-2" class="card-title card-link stretched-link"> <h2>Stake on the AIT-2</h2></a>
+        <p class="card-text">Selected for the AIT-2 Validator set? Follow this guide and stake your Aptos coins.</p>     
       </div>
     </div>
   </div>
 </div>
-<br />
 </div>
 
 ## AIT-2 program
@@ -128,9 +127,7 @@ In order to participate in the incentivized testnet, participants must demonstra
     </div>
     </div>
     </div>
-
 <div>
-<br />
 <br />
 
 ## Install the nodes for AIT-2
@@ -210,7 +207,6 @@ In order to participate in the incentivized testnet, participants must demonstra
 </div>
 </div>
 </div>
-<br />
 <br />
 
 ## Staking for the AIT-2
